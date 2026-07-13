@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+@theme {
+  --color-bg-primary: #0d1117;
+  --color-bg-secondary: #161b22;
+  --color-bg-tertiary: #21262d;
+  --color-bg-card: rgba(255,255,255,0.04);
+  
+  --color-accent: #58a6ff;
+  --color-accent-glow: rgba(88,166,255,0.25);
+  --color-accent-2: #bc8cff;
+  
+  --color-finance-income: #3fb950;
+  --color-finance-expense: #f85149;
+  --color-finance-important: #d29922;
+  
+  --color-text-primary: #e6edf3;
+  --color-text-secondary: #8b949e;
+  --color-text-muted: #484f58;
+}
+
+@layer base {
+  body {
+    @apply bg-bg-primary text-text-primary min-h-screen flex overflow-x-hidden font-sans w-full;
+  }
+  #root {
+    @apply w-full flex min-h-screen;
+  }
+}
+
+/* Custom CSS to hide scrollbar but keep scroll functionality */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { @apply bg-bg-tertiary rounded-md; }
+::-webkit-scrollbar-thumb:hover { @apply bg-text-muted; }
