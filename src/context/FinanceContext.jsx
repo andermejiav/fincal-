@@ -16,6 +16,8 @@ export const FinanceProvider = ({ children }) => {
   const [currentView, setCurrentView] = useState('calendar'); // 'calendar', 'summary', 'transactions', 'agenda'
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [addModalDefaults, setAddModalDefaults] = useState({});
   
   // Cargar datos desde localStorage al montar
   useEffect(() => {
@@ -118,6 +120,7 @@ export const FinanceProvider = ({ children }) => {
       currentView, setCurrentView,
       sidebarOpen, setSidebarOpen,
       toastMsg,
+      addModalOpen, setAddModalOpen, addModalDefaults, setAddModalDefaults,
       addTask, toggleTask, deleteTask,
       addTransaction, deleteTransaction, toggleHighlight
     }}>

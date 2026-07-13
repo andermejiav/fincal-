@@ -1,12 +1,12 @@
 import { useContext, useEffect, useRef } from 'react';
 import { FinanceContext } from '../../context/FinanceContext';
 import { parseKey, dateKey, dayLabel, todayKey } from '../../utils/helpers';
-import { ChevronLeft, ChevronRight, CheckCircle2, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CheckCircle2, Trash2, Plus } from 'lucide-react';
 
 export default function AgendaFull() {
-  const { agendaDay, setAgendaDay, getDayData, toggleTask, deleteTask } = useContext(FinanceContext);
+  const { agendaDay, setAgendaDay, getDayData, toggleTask, deleteTask, setAddModalOpen, setAddModalDefaults } = useContext(FinanceContext);
   const nowRef = useRef(null);
-  
+
   const today = new Date();
   const isToday = agendaDay === todayKey();
   const nowH = today.getHours();
@@ -27,6 +27,12 @@ export default function AgendaFull() {
     }
   }, [agendaDay]);
 
+  const openAddEvent = (h) => {
+    const hourStr = String(h).padStart(2, '0');
+    setAddModalDefaults({ date: agendaDay, time: `${hourStr}:00`, tab: 'event' });
+    setAddModalOpen(true);
+  };
+
   const colorMap = {
     blue: 'bg-accent/10 border-accent',
     green: 'bg-finance-income/10 border-finance-income',
@@ -41,7 +47,7 @@ export default function AgendaFull() {
     const hourTasks = tasks.filter(t => parseInt(t.start) === h);
 
     return (
-      <div key={h} className="flex items-start min-h-[56px] border-b border-white/10 hover:bg-white/[0.02] transition-colors p-0">
+      <div key={h} className="flex items-start min-h-[56px] border-b border-white/10 hover:bg-white/[0.02] transition-colors p-0 cursor-pointer" onClick={() => openAddEvent(h)}>
         <div className="w-[60px] shrink-0 text-[11px] font-semibold text-text-muted px-3 py-2 text-right select-none">
           {String(h).padStart(2, '0')}:00
         </div>
@@ -54,10 +60,10 @@ export default function AgendaFull() {
               <span className="text-[13px] font-semibold text-text-primary flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{task.title}</span>
               {task.note && <span className="text-[11px] text-text-secondary hidden sm:inline">{task.note}</span>}
               
-              <button className={`shrink-0 w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${task.done ? 'bg-finance-income/20 border-finance-income text-finance-income' : 'border-white/20 text-text-muted hover:border-finance-income hover:text-finance-income'}`} onClick={() => toggleTask(agendaDay, task.id)} title={task.done ? 'Marcar pendiente' : 'Completar'}>
+              <button className={`shrink-0 w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${task.done ? 'bg-finance-income/20 border-finance-income text-finance-income' : 'border-white/20 text-text-muted hover:border-finance-income hover:text-finance-income'}`} onClick={(e) => { e.stopPropagation(); toggleTask(agendaDay, task.id); }} title={task.done ? 'Marcar pendiente' : 'Completar'}>
                 {task.done && <CheckCircle2 className="w-3.5 h-3.5" />}
               </button>
-              <button className="shrink-0 p-1 rounded-md text-text-muted hover:bg-finance-expense/20 hover:text-finance-expense transition-colors" onClick={() => deleteTask(agendaDay, task.id)} title="Eliminar">
+              <button className="shrink-0 p-1 rounded-md text-text-muted hover:bg-finance-expense/20 hover:text-finance-expense transition-colors" onClick={(e) => { e.stopPropagation(); deleteTask(agendaDay, task.id); }} title="Eliminar">
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -68,7 +74,7 @@ export default function AgendaFull() {
   });
 
   return (
-    <section className="p-6 md:p-8 flex-1 w-full animate-in fade-in duration-300">
+    <section className="p-6 md:p-8 flex-1 w-full animate-in fade-in duration-300 relative">
       <div className="flex items-center justify-center gap-5 mb-6">
         <button className="w-10 h-10 rounded-full bg-bg-tertiary border border-white/10 flex items-center justify-center text-text-primary hover:bg-accent/20 hover:border-accent hover:text-accent hover:scale-105 transition-all" onClick={() => changeAgendaDay(-1)}>
           <ChevronLeft className="w-5 h-5" />
@@ -83,6 +89,9 @@ export default function AgendaFull() {
       <div className="bg-bg-card border border-white/10 rounded-2xl overflow-hidden shadow-sm">
         {hours}
       </div>
+      <button className="fixed bottom-8 right-8 w-14 h-14 rounded-full bg-gradient-to-br from-accent to-accent-2 text-white shadow-[0_4px_20px_rgba(88,166,255,0.35)] hover:shadow-[0_6px_28px_rgba(88,166,255,0.45)] hover:scale-110 active:scale-95 transition-all flex items-center justify-center z-50" onClick={() => openAddEvent(nowH)}>
+        <Plus className="w-6 h-6" />
+      </button>
     </section>
   );
 }
