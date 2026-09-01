@@ -48,6 +48,8 @@ export function uid() {
 // Calcula los totales de ingresos, gastos y balance de un día específico
 export function totals(dd) {
   let income = 0, expense = 0;
-  (dd.transactions || []).forEach(t => { t.type === 'income' ? income += t.amount : expense += t.amount; });
+  (dd.transactions || []).forEach(t => {
+    if (t.type === 'income') income += t.amount; else expense += t.amount;
+  });
   return { income, expense, balance: income - expense };
 }

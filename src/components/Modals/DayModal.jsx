@@ -1,5 +1,5 @@
 import { useContext, useState, useEffect, useRef } from 'react';
-import { FinanceContext } from '../../context/FinanceContext';
+import { FinanceContext } from '../../context/financeContext';
 import { dayLabel, todayKey, uid, fmt, totals } from '../../utils/helpers';
 import { X, Star, CalendarDays, DollarSign, TrendingUp, TrendingDown, CheckCircle2, Trash2, Plus } from 'lucide-react';
 

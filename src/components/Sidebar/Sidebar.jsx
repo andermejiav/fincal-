@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { FinanceContext } from '../../context/FinanceContext';
+import { FinanceContext } from '../../context/financeContext';
 import { totals, parseKey, fmt } from '../../utils/helpers';
 import { Calendar as CalendarIcon, BarChart3, ListOrdered, CalendarDays, X, CircleDollarSign } from 'lucide-react';
 

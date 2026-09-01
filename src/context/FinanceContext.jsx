@@ -1,8 +1,6 @@
-import { createContext, useState, useEffect } from 'react';
-import { todayKey, dateKey, parseKey } from '../utils/helpers';
-
-// Creamos el contexto
-export const FinanceContext = createContext();
+import { useState, useEffect } from 'react';
+import { todayKey } from '../utils/helpers';
+import { FinanceContext } from './financeContext';
 
 // Proveedor del contexto que envuelve la aplicación
 export const FinanceProvider = ({ children }) => {

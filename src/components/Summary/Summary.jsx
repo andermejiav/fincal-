@@ -1,5 +1,5 @@
 import { useContext, useMemo } from 'react';
-import { FinanceContext } from '../../context/FinanceContext';
+import { FinanceContext } from '../../context/financeContext';
 import { parseKey, totals, fmt, dateKey } from '../../utils/helpers';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import { TrendingUp, TrendingDown, DollarSign, Calendar as CalendarIcon, Star } from 'lucide-react';

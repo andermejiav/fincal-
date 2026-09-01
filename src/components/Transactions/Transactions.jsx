@@ -1,5 +1,5 @@
 import { useContext, useState } from 'react';
-import { FinanceContext } from '../../context/FinanceContext';
+import { FinanceContext } from '../../context/financeContext';
 import { parseKey, fmt } from '../../utils/helpers';
 import { Trash2, TrendingUp, TrendingDown, Filter } from 'lucide-react';
 
