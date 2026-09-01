@@ -1,5 +1,5 @@
 import { useContext, useEffect, useRef } from 'react';
-import { FinanceContext } from '../../context/FinanceContext';
+import { FinanceContext } from '../../context/financeContext';
 import { parseKey, dateKey, dayLabel, todayKey } from '../../utils/helpers';
 import { ChevronLeft, ChevronRight, CheckCircle2, Trash2, Plus } from 'lucide-react';
 

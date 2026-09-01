@@ -1,7 +1,7 @@
 import { useContext } from 'react';
-import { FinanceContext } from '../../context/FinanceContext';
+import { FinanceContext } from '../../context/financeContext';
 import { totals, fmt } from '../../utils/helpers';
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, getDaysInMonth, isToday, isSameDay } from 'date-fns';
+import { format, addMonths, subMonths, startOfMonth, getDaysInMonth, isSameDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 

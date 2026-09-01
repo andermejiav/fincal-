@@ -1,5 +1,5 @@
 import { useContext, useState, useEffect } from 'react';
-import { FinanceContext } from '../../context/FinanceContext';
+import { FinanceContext } from '../../context/financeContext';
 import { dateKey, uid } from '../../utils/helpers';
 import { X, Check, CalendarDays, DollarSign } from 'lucide-react';
 
