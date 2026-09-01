@@ -16,7 +16,7 @@ function AppContent() {
   return (
     <div className="flex w-full min-h-screen bg-bg-primary overflow-hidden">
       <Sidebar />
-      <main className={`flex-1 flex flex-col h-screen overflow-y-auto transition-all ${!sidebarOpen && window.innerWidth > 768 ? 'ml-0' : ''}`} id="mainContent">
+      <main className="flex-1 flex flex-col h-screen overflow-y-auto transition-all" id="mainContent">
         <Topbar onAddClick={() => setAddModalOpen(true)} />
         
         {currentView === 'calendar' && <Calendar />}
