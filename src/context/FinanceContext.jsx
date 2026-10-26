@@ -1,10 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { todayKey } from '../utils/helpers';
 import { FinanceContext } from './financeContext';
 
 // Proveedor del contexto que envuelve la aplicación
 export const FinanceProvider = ({ children }) => {
-  const [data, setData] = useState({});
+  // Inicialización perezosa para evitar estado vacío intermedio o sobreescritura en localStorage
+  const [data, setData] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('fincal_data') || '{}');
+    } catch {
+      return {};
+    }
+  });
+
   const [viewMonth, setViewMonth] = useState(() => {
     const today = new Date();
     return new Date(today.getFullYear(), today.getMonth(), 1);
@@ -16,20 +24,15 @@ export const FinanceProvider = ({ children }) => {
   const [toastMsg, setToastMsg] = useState('');
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [addModalDefaults, setAddModalDefaults] = useState({});
-  
-  // Cargar datos desde localStorage al montar
-  useEffect(() => {
-    try {
-      const localData = JSON.parse(localStorage.getItem('fincal_data') || '{}');
-      setData(localData);
-    } catch {
-      setData({});
-    }
-  }, []);
+  const toastTimerRef = useRef(null);
 
   // Guardar datos en localStorage cuando cambien
   useEffect(() => {
-    localStorage.setItem('fincal_data', JSON.stringify(data));
+    try {
+      localStorage.setItem('fincal_data', JSON.stringify(data));
+    } catch (e) {
+      console.error('Error al guardar datos en localStorage:', e);
+    }
   }, [data]);
 
   // Obtiene los datos de un día, asegurando que tenga la estructura correcta
@@ -41,10 +44,13 @@ export const FinanceProvider = ({ children }) => {
     return dayData;
   };
 
-  // Muestra un mensaje flotante (toast)
+  // Muestra un mensaje flotante (toast) con reinicio seguro del temporizador
   const showToast = (msg) => {
     setToastMsg(msg);
-    setTimeout(() => setToastMsg(''), 2500);
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => {
+      setToastMsg('');
+    }, 2500);
   };
 
   // Agregar una tarea a un día específico
@@ -62,7 +68,7 @@ export const FinanceProvider = ({ children }) => {
     setData(prev => {
       const day = prev[key];
       if (!day) return prev;
-      const tasks = day.tasks.map(t => t.id === id ? { ...t, done: !t.done } : t);
+      const tasks = (day.tasks || []).map(t => t.id === id ? { ...t, done: !t.done } : t);
       return { ...prev, [key]: { ...day, tasks } };
     });
   };
@@ -72,7 +78,7 @@ export const FinanceProvider = ({ children }) => {
     setData(prev => {
       const day = prev[key];
       if (!day) return prev;
-      const tasks = day.tasks.filter(t => t.id !== id);
+      const tasks = (day.tasks || []).filter(t => t.id !== id);
       return { ...prev, [key]: { ...day, tasks } };
     });
     showToast('Tarea eliminada');
@@ -93,7 +99,7 @@ export const FinanceProvider = ({ children }) => {
     setData(prev => {
       const day = prev[key];
       if (!day) return prev;
-      const transactions = day.transactions.filter(t => t.id !== txId);
+      const transactions = (day.transactions || []).filter(t => t.id !== txId);
       return { ...prev, [key]: { ...day, transactions } };
     });
     showToast('Transacción eliminada');
@@ -101,12 +107,13 @@ export const FinanceProvider = ({ children }) => {
 
   // Alternar el estado "importante" de un día
   const toggleHighlight = (key) => {
+    let isImportant = false;
     setData(prev => {
       const day = prev[key] || { important: false, transactions: [], tasks: [] };
-      const isImportant = !day.important;
-      showToast(isImportant ? '⭐ Día marcado como importante' : 'Marca eliminada');
+      isImportant = !day.important;
       return { ...prev, [key]: { ...day, important: isImportant } };
     });
+    showToast(isImportant ? '⭐ Día marcado como importante' : 'Marca eliminada');
   };
 
   return (
@@ -117,7 +124,7 @@ export const FinanceProvider = ({ children }) => {
       agendaDay, setAgendaDay,
       currentView, setCurrentView,
       sidebarOpen, setSidebarOpen,
-      toastMsg,
+      toastMsg, showToast,
       addModalOpen, setAddModalOpen, addModalDefaults, setAddModalDefaults,
       addTask, toggleTask, deleteTask,
       addTransaction, deleteTransaction, toggleHighlight

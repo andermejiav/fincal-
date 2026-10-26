@@ -10,22 +10,31 @@ function applyVars(vars) {
 }
 
 export const ThemeProvider = ({ children }) => {
-  const [activePreset, setActivePreset] = useState('default');
-  const [customVars, setCustomVars] = useState({});
-  const [themePanelOpen, setThemePanelOpen] = useState(false);
-
-  // Cargar tema guardado
-  useEffect(() => {
+  const [activePreset, setActivePreset] = useState(() => {
     try {
       const saved = JSON.parse(localStorage.getItem('fincal_theme') || '{}');
-      if (saved.presetId) setActivePreset(saved.presetId);
-      if (saved.customVars) setCustomVars(saved.customVars);
-      const preset = PRESETS.find(p => p.id === (saved.presetId || 'default')) || PRESETS[0];
-      applyVars({ ...preset.vars, ...(saved.customVars || {}) });
+      return saved.presetId || 'default';
     } catch {
-      applyVars(PRESETS[0].vars);
+      return 'default';
     }
-  }, []);
+  });
+
+  const [customVars, setCustomVars] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('fincal_theme') || '{}');
+      return saved.customVars || {};
+    } catch {
+      return {};
+    }
+  });
+
+  const [themePanelOpen, setThemePanelOpen] = useState(false);
+
+  // Aplicar tema guardado al montar
+  useEffect(() => {
+    const preset = PRESETS.find(p => p.id === activePreset) || PRESETS[0];
+    applyVars({ ...preset.vars, ...customVars });
+  }, [activePreset, customVars]);
 
   // Aplicar paleta predefinida
   const applyPreset = useCallback((presetId) => {

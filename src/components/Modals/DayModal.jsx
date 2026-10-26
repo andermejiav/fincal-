@@ -7,7 +7,7 @@ export default function DayModal() {
   const { 
     activeDay, setActiveDay, getDayData, 
     toggleHighlight, addTask, toggleTask, deleteTask, 
-    addTransaction, deleteTransaction 
+    addTransaction, deleteTransaction, showToast 
   } = useContext(FinanceContext);
   
   const [activeTab, setActiveTab] = useState('agenda');
@@ -33,6 +33,18 @@ export default function DayModal() {
     }
   }, [activeDay, activeTab]);
 
+  // Cerrar al presionar la tecla Escape
+  useEffect(() => {
+    if (!activeDay) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setActiveDay(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeDay, setActiveDay]);
+
   if (!activeDay) return null;
 
   const dayData = getDayData(activeDay);
@@ -40,9 +52,23 @@ export default function DayModal() {
   const today = new Date();
   const nowH = today.getHours();
   
+  const notify = (msg) => {
+    if (showToast) {
+      showToast(msg);
+    } else {
+      alert(msg);
+    }
+  };
+
   const handleSaveTask = () => {
-    if (!taskTitle.trim()) return alert('Escribe una tarea');
-    if (!taskTime || !taskEndTime) return alert('Indica la hora');
+    if (!taskTitle.trim()) {
+      notify('⚠️ Escribe el título de la tarea');
+      return;
+    }
+    if (!taskTime || !taskEndTime) {
+      notify('⚠️ Indica la hora de inicio y fin');
+      return;
+    }
     
     addTask(activeDay, {
       id: uid(),
@@ -60,7 +86,10 @@ export default function DayModal() {
 
   const handleSaveTx = () => {
     const amount = parseFloat(txAmount);
-    if (!amount || amount <= 0) return alert('Ingresa un monto válido');
+    if (!amount || amount <= 0) {
+      notify('⚠️ Ingresa un monto válido');
+      return;
+    }
     
     addTransaction(activeDay, {
       id: uid(),
@@ -89,8 +118,8 @@ export default function DayModal() {
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[1000] flex items-center justify-center p-5 animate-in fade-in duration-200" onClick={(e) => e.target === e.currentTarget && setActiveDay(null)}>
       <div className="bg-bg-secondary border border-white/10 rounded-2xl w-full max-w-[500px] max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95 duration-200">
         
-        <div className="flex items-center justify-between p-5 pt-6">
-          <h2 className="text-lg font-bold text-text-primary">{dayLabel(activeDay)}</h2>
+        <div className="flex items-center justify-between p-5 pt-6 sticky top-0 bg-bg-secondary z-10 border-b border-white/10">
+          <h2 className="text-lg font-bold text-text-primary capitalize">{dayLabel(activeDay)}</h2>
           <div className="flex gap-2 items-center">
             <button className={`w-8 h-8 rounded-full border flex items-center justify-center transition-all ${dayData.important ? 'border-finance-important bg-finance-important/15 text-finance-important shadow-[0_0_8px_rgba(210,153,34,0.3)]' : 'border-white/10 text-text-muted hover:border-finance-important hover:bg-finance-important/10'}`} onClick={() => toggleHighlight(activeDay)} title="Marcar importante">
               <Star className="w-4 h-4" />
@@ -101,7 +130,7 @@ export default function DayModal() {
           </div>
         </div>
 
-        <div className="flex gap-1 px-5 pt-2">
+        <div className="flex gap-1 px-5 pt-4">
           <button className={`flex-1 py-2 px-3 rounded-lg text-sm font-semibold border flex items-center justify-center gap-2 transition-all ${activeTab === 'agenda' ? 'bg-accent/20 border-accent text-accent' : 'bg-bg-tertiary border-white/10 text-text-secondary hover:border-white/20 hover:text-text-primary'}`} onClick={() => setActiveTab('agenda')}>
             <CalendarDays className="w-4 h-4" /> Agenda
           </button>
@@ -139,7 +168,7 @@ export default function DayModal() {
             <div className="py-2.5 max-h-[340px] overflow-y-auto">
               {Array.from({ length: 24 }).map((_, h) => {
                 const isNow = isToday && h === nowH;
-                const hourTasks = (dayData.tasks || []).filter(t => parseInt(t.start) === h);
+                const hourTasks = (dayData.tasks || []).filter(t => parseInt(t.start, 10) === h);
 
                 return (
                   <div key={h} className="flex items-start min-h-[48px] relative">
@@ -152,7 +181,8 @@ export default function DayModal() {
                       {hourTasks.map(task => (
                         <div key={task.id} className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border-l-[3px] transition-opacity ${colorMap[task.color || 'blue']} ${task.done ? 'opacity-45 line-through' : 'hover:opacity-85'}`}>
                           <span className="text-[10px] font-bold text-text-muted shrink-0">{task.start}–{task.end}</span>
-                          <span className="text-xs font-semibold text-text-primary flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{task.title}</span>
+                          <span className="text-xs font-semibold text-text-primary flex-1 overflow-hidden text-ellipsis whitespace-nowrap" title={task.title}>{task.title}</span>
+                          {task.note && <span className="text-[11px] text-text-secondary hidden sm:inline truncate max-w-[120px]" title={task.note}>({task.note})</span>}
                           
                           <button className={`shrink-0 w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${task.done ? 'bg-finance-income/20 border-finance-income text-finance-income' : 'border-white/20 text-text-muted hover:border-finance-income hover:text-finance-income'}`} onClick={() => toggleTask(activeDay, task.id)} title={task.done ? 'Marcar pendiente' : 'Completar'}>
                             {task.done && <CheckCircle2 className="w-3.5 h-3.5" />}

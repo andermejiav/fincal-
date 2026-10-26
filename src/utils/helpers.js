@@ -24,6 +24,10 @@ export function todayKey() {
 
 // Analiza una clave de fecha devolviendo un objeto {y, m, d}
 export function parseKey(k) {
+  if (!k || typeof k !== 'string') {
+    const today = new Date();
+    return { y: today.getFullYear(), m: today.getMonth(), d: today.getDate() };
+  }
   const [y, m, d] = k.split('-').map(Number);
   return { y, m: m - 1, d };
 }
@@ -47,9 +51,11 @@ export function uid() {
 
 // Calcula los totales de ingresos, gastos y balance de un día específico
 export function totals(dd) {
+  if (!dd) return { income: 0, expense: 0, balance: 0 };
   let income = 0, expense = 0;
   (dd.transactions || []).forEach(t => {
-    if (t.type === 'income') income += t.amount; else expense += t.amount;
+    const amt = Number(t.amount) || 0;
+    if (t.type === 'income') income += amt; else expense += amt;
   });
   return { income, expense, balance: income - expense };
 }

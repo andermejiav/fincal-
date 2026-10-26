@@ -38,7 +38,15 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className={`fixed md:static inset-y-0 left-0 z-50 w-[260px] bg-bg-secondary border-r border-white/10 flex flex-col transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+    <>
+      {/* Backdrop para móviles al abrir el sidebar */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 md:hidden animate-in fade-in duration-200" 
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      <aside className={`fixed md:static inset-y-0 left-0 z-50 w-[260px] bg-bg-secondary border-r border-white/10 flex flex-col transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
       <div className="flex items-center justify-between p-5 pb-3 border-b border-white/10">
         <div className="flex items-center gap-2">
           <CircleDollarSign className="w-6 h-6 text-accent" />
@@ -91,5 +99,6 @@ export default function Sidebar() {
         <div className="flex items-center gap-2 text-xs text-text-secondary mb-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-accent shrink-0"></span> Hoy</div>
       </div>
     </aside>
+    </>
   );
 }

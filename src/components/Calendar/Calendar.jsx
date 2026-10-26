@@ -1,8 +1,8 @@
 import { useContext } from 'react';
 import { FinanceContext } from '../../context/financeContext';
-import { totals, fmt } from '../../utils/helpers';
+import { totals, fmt, fmtShort } from '../../utils/helpers';
 import { format, addMonths, subMonths, startOfMonth, getDaysInMonth, isSameDay } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { es } from 'date-fns/locale/es';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function Calendar() {
@@ -47,9 +47,9 @@ export default function Calendar() {
           {d}
         </div>
         <div className="flex flex-col xl:flex-row gap-1 mt-auto flex-wrap">
-          {income > 0 && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-finance-income/10 text-finance-income whitespace-nowrap overflow-hidden text-ellipsis">+{fmt(income)}</span>}
-          {expense > 0 && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-finance-expense/10 text-finance-expense whitespace-nowrap overflow-hidden text-ellipsis">-{fmt(expense)}</span>}
-          {taskCount > 0 && <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-accent-2/15 text-accent-2 whitespace-nowrap overflow-hidden text-ellipsis">{taskCount}</span>}
+          {income > 0 && <span title={`Ingresos: ${fmt(income)}`} className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-finance-income/10 text-finance-income whitespace-nowrap overflow-hidden text-ellipsis">+{fmtShort(income)}</span>}
+          {expense > 0 && <span title={`Gastos: ${fmt(expense)}`} className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-finance-expense/10 text-finance-expense whitespace-nowrap overflow-hidden text-ellipsis">-{fmtShort(expense)}</span>}
+          {taskCount > 0 && <span title={`${taskCount} tarea(s)`} className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-accent-2/15 text-accent-2 whitespace-nowrap overflow-hidden text-ellipsis">{taskCount}</span>}
         </div>
       </div>
     );

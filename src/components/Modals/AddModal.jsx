@@ -1,10 +1,10 @@
-import { useContext, useState, useEffect } from 'react';
+import { useContext, useState, useEffect, useCallback } from 'react';
 import { FinanceContext } from '../../context/financeContext';
 import { dateKey, uid } from '../../utils/helpers';
 import { X, Check, CalendarDays, DollarSign } from 'lucide-react';
 
 export default function AddModal() {
-  const { addTransaction, addTask, addModalOpen, setAddModalOpen, addModalDefaults } = useContext(FinanceContext);
+  const { addTransaction, addTask, addModalOpen, setAddModalOpen, addModalDefaults, setAddModalDefaults, showToast } = useContext(FinanceContext);
   
   const [activeTab, setActiveTab] = useState('transaction');
   const [txDate, setTxDate] = useState('');
@@ -20,14 +20,27 @@ export default function AddModal() {
   const [taskColor, setTaskColor] = useState('blue');
   const [taskNote, setTaskNote] = useState('');
 
+  const close = useCallback(() => {
+    setAddModalOpen(false);
+    if (setAddModalDefaults) setAddModalDefaults({});
+  }, [setAddModalOpen, setAddModalDefaults]);
+
+  const notify = useCallback((msg) => {
+    if (showToast) {
+      showToast(msg);
+    } else {
+      alert(msg);
+    }
+  }, [showToast]);
+
   useEffect(() => {
     if (addModalOpen) {
       const today = new Date();
       const key = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
-      const defDate = addModalDefaults.date || key;
-      const defTime = addModalDefaults.time || '08:00';
-      const endH = parseInt(defTime) + 1 > 23 ? 23 : parseInt(defTime) + 1;
-      setTxDate(key);
+      const defDate = addModalDefaults?.date || key;
+      const defTime = addModalDefaults?.time || '08:00';
+      const endH = parseInt(defTime, 10) + 1 > 23 ? 23 : parseInt(defTime, 10) + 1;
+      setTxDate(defDate);
       setTxType('income');
       setTxAmount('');
       setTxDescription('');
@@ -38,18 +51,34 @@ export default function AddModal() {
       setTaskTitle('');
       setTaskColor('blue');
       setTaskNote('');
-      setActiveTab(addModalDefaults.tab || 'transaction');
+      setActiveTab(addModalDefaults?.tab || 'transaction');
     }
   }, [addModalOpen, addModalDefaults]);
 
+  // Cerrar al presionar la tecla Escape
+  useEffect(() => {
+    if (!addModalOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        close();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [addModalOpen, close]);
+
   if (!addModalOpen) return null;
 
-  const close = () => setAddModalOpen(false);
-
   const handleSaveTx = () => {
-    if (!txDate) return alert('Selecciona una fecha');
+    if (!txDate) {
+      notify('⚠️ Selecciona una fecha');
+      return;
+    }
     const amount = parseFloat(txAmount);
-    if (!amount || amount <= 0) return alert('Ingresa un monto válido');
+    if (!amount || amount <= 0) {
+      notify('⚠️ Ingresa un monto válido');
+      return;
+    }
     
     const [y, m, d] = txDate.split('-').map(Number);
     const key = dateKey(y, m - 1, d);
@@ -66,8 +95,14 @@ export default function AddModal() {
   };
 
   const handleSaveTask = () => {
-    if (!taskDate) return alert('Selecciona una fecha');
-    if (!taskTitle.trim()) return alert('Escribe el nombre del evento');
+    if (!taskDate) {
+      notify('⚠️ Selecciona una fecha');
+      return;
+    }
+    if (!taskTitle.trim()) {
+      notify('⚠️ Escribe el nombre del evento');
+      return;
+    }
     
     const [y, m, d] = taskDate.split('-').map(Number);
     const key = dateKey(y, m - 1, d);
@@ -87,8 +122,8 @@ export default function AddModal() {
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[1000] flex items-center justify-center p-5 animate-in fade-in duration-200" onClick={(e) => e.target === e.currentTarget && close()}>
-      <div className="bg-bg-secondary border border-white/10 rounded-2xl w-full max-w-[450px] shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden">
-        <div className="flex items-center justify-between p-5 border-b border-white/10">
+      <div className="bg-bg-secondary border border-white/10 rounded-2xl w-full max-w-[450px] max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between p-5 border-b border-white/10 sticky top-0 bg-bg-secondary z-10">
           <h2 className="text-lg font-bold text-text-primary">Nuevo</h2>
           <button className="w-8 h-8 rounded-full bg-bg-tertiary border border-white/10 flex items-center justify-center text-text-secondary hover:bg-finance-expense/15 hover:text-finance-expense hover:border-finance-expense transition-all" onClick={close}>
             <X className="w-4 h-4" />
@@ -107,19 +142,28 @@ export default function AddModal() {
         {activeTab === 'transaction' && (
           <div className="p-5">
             <div className="mb-3">
+              <label className="block text-xs font-semibold text-text-secondary mb-1">Fecha</label>
               <input type="date" className="w-full bg-bg-tertiary border border-white/10 text-text-primary rounded-lg px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent-glow outline-none transition-all [color-scheme:dark]" value={txDate} onChange={e => setTxDate(e.target.value)} />
             </div>
             <div className="flex gap-2 mb-3">
-              <select className="flex-1 bg-bg-tertiary border border-white/10 text-text-primary rounded-lg px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent-glow outline-none transition-all" value={txType} onChange={e => setTxType(e.target.value)}>
-                <option value="income">💚 Ingreso</option>
-                <option value="expense">🔴 Gasto</option>
-              </select>
-              <input type="number" className="flex-1 bg-bg-tertiary border border-white/10 text-text-primary rounded-lg px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent-glow outline-none transition-all" placeholder="Monto" min="0" step="0.01" value={txAmount} onChange={e => setTxAmount(e.target.value)} />
+              <div className="flex-1">
+                <label className="block text-xs font-semibold text-text-secondary mb-1">Tipo</label>
+                <select className="w-full bg-bg-tertiary border border-white/10 text-text-primary rounded-lg px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent-glow outline-none transition-all" value={txType} onChange={e => setTxType(e.target.value)}>
+                  <option value="income">💚 Ingreso</option>
+                  <option value="expense">🔴 Gasto</option>
+                </select>
+              </div>
+              <div className="flex-1">
+                <label className="block text-xs font-semibold text-text-secondary mb-1">Monto</label>
+                <input type="number" className="w-full bg-bg-tertiary border border-white/10 text-text-primary rounded-lg px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent-glow outline-none transition-all" placeholder="Monto" min="0" step="0.01" value={txAmount} onChange={e => setTxAmount(e.target.value)} />
+              </div>
             </div>
             <div className="mb-3">
+              <label className="block text-xs font-semibold text-text-secondary mb-1">Descripción</label>
               <input type="text" className="w-full bg-bg-tertiary border border-white/10 text-text-primary rounded-lg px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent-glow outline-none transition-all" placeholder="Descripción" value={txDescription} onChange={e => setTxDescription(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSaveTx()} />
             </div>
             <div className="mb-4">
+              <label className="block text-xs font-semibold text-text-secondary mb-1">Categoría</label>
               <select className="w-full bg-bg-tertiary border border-white/10 text-text-primary rounded-lg px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent-glow outline-none transition-all" value={txCategory} onChange={e => setTxCategory(e.target.value)}>
                 <option value="">Selecciona categoría</option>
                 <option value="🍕 Alimentación">🍕 Alimentación</option>
@@ -143,25 +187,39 @@ export default function AddModal() {
         {activeTab === 'event' && (
           <div className="p-5">
             <div className="mb-3">
+              <label className="block text-xs font-semibold text-text-secondary mb-1">Fecha</label>
               <input type="date" className="w-full bg-bg-tertiary border border-white/10 text-text-primary rounded-lg px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent-glow outline-none transition-all [color-scheme:dark]" value={taskDate} onChange={e => setTaskDate(e.target.value)} />
             </div>
             <div className="flex gap-2 mb-3">
-              <input type="time" className="flex-1 bg-bg-tertiary border border-white/10 text-text-primary rounded-lg px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent-glow outline-none transition-all" value={taskTime} onChange={e => setTaskTime(e.target.value)} />
-              <input type="time" className="flex-1 bg-bg-tertiary border border-white/10 text-text-primary rounded-lg px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent-glow outline-none transition-all" value={taskEndTime} onChange={e => setTaskEndTime(e.target.value)} />
+              <div className="flex-1">
+                <label className="block text-xs font-semibold text-text-secondary mb-1">Inicio</label>
+                <input type="time" className="w-full bg-bg-tertiary border border-white/10 text-text-primary rounded-lg px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent-glow outline-none transition-all" value={taskTime} onChange={e => setTaskTime(e.target.value)} />
+              </div>
+              <div className="flex-1">
+                <label className="block text-xs font-semibold text-text-secondary mb-1">Fin</label>
+                <input type="time" className="w-full bg-bg-tertiary border border-white/10 text-text-primary rounded-lg px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent-glow outline-none transition-all" value={taskEndTime} onChange={e => setTaskEndTime(e.target.value)} />
+              </div>
             </div>
             <div className="mb-3">
+              <label className="block text-xs font-semibold text-text-secondary mb-1">Título de la actividad</label>
               <input type="text" className="w-full bg-bg-tertiary border border-white/10 text-text-primary rounded-lg px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent-glow outline-none transition-all" placeholder="¿Qué vas a hacer?" value={taskTitle} onChange={e => setTaskTitle(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSaveTask()} autoFocus />
             </div>
             <div className="flex gap-2 mb-4">
-              <select className="flex-1 bg-bg-tertiary border border-white/10 text-text-primary rounded-lg px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent-glow outline-none transition-all" value={taskColor} onChange={e => setTaskColor(e.target.value)}>
-                <option value="blue">🔵 Trabajo</option>
-                <option value="green">🟢 Personal</option>
-                <option value="purple">🟣 Estudio</option>
-                <option value="orange">🟠 Salud</option>
-                <option value="red">🔴 Urgente</option>
-                <option value="yellow">🟡 Recordatorio</option>
-              </select>
-              <input type="text" className="flex-1 bg-bg-tertiary border border-white/10 text-text-primary rounded-lg px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent-glow outline-none transition-all" placeholder="Nota (opcional)" value={taskNote} onChange={e => setTaskNote(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSaveTask()} />
+              <div className="flex-1">
+                <label className="block text-xs font-semibold text-text-secondary mb-1">Categoría</label>
+                <select className="w-full bg-bg-tertiary border border-white/10 text-text-primary rounded-lg px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent-glow outline-none transition-all" value={taskColor} onChange={e => setTaskColor(e.target.value)}>
+                  <option value="blue">🔵 Trabajo</option>
+                  <option value="green">🟢 Personal</option>
+                  <option value="purple">🟣 Estudio</option>
+                  <option value="orange">🟠 Salud</option>
+                  <option value="red">🔴 Urgente</option>
+                  <option value="yellow">🟡 Recordatorio</option>
+                </select>
+              </div>
+              <div className="flex-1">
+                <label className="block text-xs font-semibold text-text-secondary mb-1">Nota (opcional)</label>
+                <input type="text" className="w-full bg-bg-tertiary border border-white/10 text-text-primary rounded-lg px-3.5 py-2.5 text-sm focus:border-accent focus:ring-2 focus:ring-accent-glow outline-none transition-all" placeholder="Nota..." value={taskNote} onChange={e => setTaskNote(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSaveTask()} />
+              </div>
             </div>
             <button className="w-full py-3 bg-gradient-to-br from-accent to-accent-2 text-white rounded-xl text-sm font-bold shadow-[0_4px_16px_rgba(88,166,255,0.25)] hover:shadow-[0_6px_24px_rgba(88,166,255,0.25)] hover:opacity-90 hover:-translate-y-px transition-all flex items-center justify-center gap-2" onClick={handleSaveTask}>
               <Check className="w-4 h-4" /> Guardar evento
